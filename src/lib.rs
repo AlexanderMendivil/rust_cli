@@ -22,13 +22,19 @@ pub struct Config {
 } 
 
 impl  Config {
-    pub fn new(args: &[String]) -> Result<Config, String> {
+    pub fn new(mut args: env::Args) -> Result<Config, &'static str> {
+        args.next();
 
-        if args.len() < 3 {
-            return Err("Not enough arguments".to_string());
-        }
-        let query = args[1].clone();
-        let filename = args[2].clone();
+        let query = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Did not get the query string"),
+        };
+        
+        let filename = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Did not get the filename string"),
+        };
+        
         let case_sensitive = env::var("CASE_INSENSITIVE").is_err();
         
         Ok(Self {
@@ -41,13 +47,7 @@ impl  Config {
 }
 
 pub fn search<'a>(query: &'a str, contents: &'a str) -> Vec<&'a str> {
-    let mut results = Vec::new();
-    for i in contents.lines() {
-        if i.contains(query) {
-            results.push(i);
-        }
-    }
-    results
+    contents.lines().filter(|line| line.contains(query)).collect()
 }
 
 
